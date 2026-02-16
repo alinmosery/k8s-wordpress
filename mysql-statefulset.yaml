@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-mysql     # השם הזה קריטי! הוורדפרס מחפש בדיוק את השם הזה
+  labels:
+    app: wordpress
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: wordpress
+    tier: mysql
+  clusterIP: None  # Headless Service (סטנדרט ל-StatefulSets)
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wordpress-mysql
+  labels:
+    app: wordpress
+spec:
+  serviceName: "wordpress-mysql"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+      tier: mysql
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: mysql
+    spec:
+      containers:
+      - name: mysql
+        # האימג' שלך מה-ECR (MariaDB 10.6.4)
+        image: 992382545251.dkr.ecr.us-east-1.amazonaws.com/alin-mariadb:10.6.4-focal
+        env:
+        # שליפת הסיסמאות מה-Secret שיצרנו בהתחלה
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password-root
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password-user
+        - name: MYSQL_USER
+          value: wordpress
+        - name: MYSQL_DATABASE
+          value: wordpress
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+  # החלק הזה יוצר אוטומטית את ה"דיסק הקשיח" (PVC) לכל רפליקה
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-persistent-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
