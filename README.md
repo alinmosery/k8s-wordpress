@@ -1,47 +1,41 @@
 פרויקט פריסת WordPress ומערכת ניטור ב-Kubernetes
 תיאור הפרויקט
-הפרויקט מציג פריסה אוטומטית של אפליקציית WordPress מבוססת בסיס נתונים MySQL על גבי Kubernetes. המערכת כוללת ניהול משאבים באמצעות Helm Chart והטמעת מערכת ניטור מלאה מבוססת Prometheus ו-Grafana.
+פרויקט זה מבצע פריסה אוטומטית של אפליקציית WordPress מבוססת בסיס נתונים MySQL על גבי קלאסטר Kubernetes. הפרויקט כולל ניהול משאבים באמצעות Helm Chart ומערכת ניטור מלאה (Monitoring) מבוססת Prometheus ו-Grafana למעקב אחר ביצועי הקונטיינרים.
 
-ארכיטקטורת המערכת
-Application Layer: WordPress Deployment המחובר לשירות LoadBalancer/NodePort.
+ארכיטקטורה
+Application Layer: WordPress Deployment.
 
-Persistence Layer: MySQL Deployment עם שימוש ב-Persistent Volume Claim לשמירת נתונים.
+Database Layer: MySQL Deployment עם Persistent Volume Claim (PVC) לשמירת נתונים.
 
-Infrastructure: שימוש ב-Minikube על גבי שרת AWS EC2.
+Monitoring Stack: Prometheus לאיסוף מטריקות ו-Grafana להצגת דאשבורדים.
 
-Monitoring Stack: איסוף מטריקות באמצעות Prometheus והצגתן בדאשבורד Grafana.
+Package Management: שימוש ב-Helm לניהול הגדרות הפריסה.
 
 דרישות מקדימות
-שרת לינוקס (EC2) עם Minikube מותקן.
+קלאסטר Kubernetes פעיל.
 
-כלי ניהול החבילות Helm.
+Helm מותקן ומקושר לקלאסטר.
 
-גישה ל-Kubectl.
+Kube-state-metrics מותקן (חלק מ-kube-prom-stack).
 
 הוראות הרצה
-הפעלת הקלאסטר:
+התקנת ה-Chart:
+מעבר לתיקיית הפרויקט והרצת הפקודה:
 
 Bash
-minikube start
-פריסת האפליקציה באמצעות Helm:
-עבורי לתיקיית ה-Chart והריצי:
-
-Bash
-helm install wordpress-release ./my-wordpress-chart
+helm install wordpress-app ./my-wordpress-chart
 התקנת מערכת הניטור:
+הוספת ה-Repository והתקנת ה-Stack:
 
 Bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm install monitoring-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
-אימות והתחברות
-וידוא שהפודים רצים: kubectl get pods -A.
+אימות פריסה
+בדיקת סטטוס פודים: kubectl get pods.
 
-גישה לניטור: ביצוע Port Forward לפורט 3000 וחיבור דרך הדפדפן.
+וידוא גישה לאתר: בדיקת ה-Service של WordPress וגישה דרך הדפדפן.
 
-בדיקת תקינות: בגרפאנה הוגדר פאנל Stat המציג את זמינות הקונטיינר (Running/Down) על בסיס מטריקת kube_pod_container_status_running.
+וידוא ניטור: כניסה ל-Grafana Explore ובדיקת המטריקה kube_pod_container_status_running.
 
-הגדרות Done
-האפליקציה נגישה ומחוברת לבסיס הנתונים.
-
-קיים ניטור פעיל בגרפאנה עבור הקונטיינרים.
-
-כל המשאבים מנוהלים דרך Helm ומאוחסנים ב-Git.
+הגדרות ניטור
+במערכת ה-Grafana הוגדר דאשבורד ייעודי המציג את זמינות הקונטיינרים (Uptime). הפאנל מוגדר עם Value Mappings המציג סטטוס Running עבור ערך 1 וסטטוס Down עבור ערך 0.
