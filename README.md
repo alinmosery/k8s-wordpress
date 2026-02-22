@@ -1,12 +1,59 @@
-פרויקט DevOps: פריסת WordPress על Kubernetes עם ניטור מלא 🚀פרויקט זה מציג הגירה של אפליקציית WordPress מפורמט Docker-Compose לסביבת Kubernetes (Minikube) על גבי AWS EC2. המערכת כוללת שרידות נתונים גבוהה, ניטור בזמן אמת וניהול באמצעות Helm.🏗️ טכנולוגיות וארכיטקטורהרכיבטכנולוגיהתיאורתשתיתAWS EC2 (T3.Medium)שרת האירוח של המערכת.ניהול קלאסטרMinikube (Kubernetes)הרצת הקונטיינרים והשירותים.ניהול חבילותHelm Chartsניהול פריסת האפליקציה והניטור.אחסון אימג'יםAmazon ECRאחסון מאובטח של ה-Docker Images.בסיס נתוניםMySQL StatefulSetהבטחת זהות קבועה ושמירת נתונים (Persistence).ניטורPrometheus & Grafanaאיסוף מטריקות וויזואליזציה של בריאות המערכת.⚙️ הוראות הרצה מהירה (Copy-Paste)לביצוע התקנה נקייה של הפרויקט, הרץ את הפקודות הבאות בטרמינל:1. התקנת האפליקציה (WordPress & MySQL)Bash# התקנת ה-Chart המקומי של האפליקציה
+# 🚀 WordPress Deployment on Kubernetes with Monitoring
+
+פרויקט זה מציג הגירה של אפליקציית WordPress מפורמט Docker-Compose לסביבת Kubernetes מנוהלת. הפרויקט כולל פריסה מאובטחת, שמירת נתונים קבועה וניטור ביצועים בזמן אמת.
+
+---
+
+### 🏗️ Architecture & Stack
+- **Cloud Infrastructure:** AWS EC2 (T3.Medium hosting Minikube).
+- **Orchestration:** Kubernetes managed with Helm Charts.
+- **Container Registry:** Amazon ECR for custom images.
+- **Application:** WordPress (Deployment with 2 Replicas).
+- **Database:** MySQL (StatefulSet for data persistence).
+- **Monitoring:** Prometheus & Grafana stack.
+
+---
+
+### ⚙️ Installation & Setup (Quick Start)
+
+# 1. Install WordPress & MySQL
 helm install wordpress-release ./my-wordpress-chart
-2. התקנת מערכת הניטור (Prometheus & Grafana)Bash# הוספת המאגר של Prometheus
+
+# 2. Add Prometheus Community Repo
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
 
-# התקנת הסטאק ב-Namespace ייעודי
+# 3. Install Monitoring Stack
 helm install monitoring-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
-🖥️ גישה לשירותים (Access)מכיוון שהפרויקט רץ בסביבת Minikube מרוחקת, הגישה מתבצעת באמצעות Port Forwarding:גישה לאתר WordPressBashkubectl port-forward --address 0.0.0.0 svc/wordpress 8080:80
-כניסה בדפדפן: http://<Public-IP>:8080גישה ללוח הבקרה GrafanaBashkubectl port-forward --address 0.0.0.0 svc/prometheus-grafana 3000:80 -n monitoring
-כניסה בדפדפן: http://<Public-IP>:3000📊 אסטרטגיית ניטורבנינו דאשבורד ייעודי ב-Grafana תחת השם App Uptime המנטר את זמינות הקונטיינרים ב-Namespace של האפליקציה.השאילתה המרכזית (PromQL):קטע קודkube_pod_container_status_running{namespace="default"}
-שאילתה זו מסננת רעשי מערכת ומציגה חיווי ויזואלי מהיר (Stat Panel) על בריאות הוורדפרס ובסיס הנתונים בלבד.
+
+---
+
+### 🖥️ Accessing the Services
+
+כדי לגשת לשירותים מסביבת ה-EC2 המרוחקת, השתמשתי ב-Port Forwarding:
+
+# Access WordPress Site (Port 8080)
+# Visit: http://<Public-IP>:8080
+kubectl port-forward --address 0.0.0.0 svc/wordpress 8080:80
+
+# Access Grafana Dashboard (Port 3000)
+# Visit: http://<Public-IP>:3000
+kubectl port-forward --address 0.0.0.0 svc/prometheus-grafana 3000:80 -n monitoring
+
+---
+
+### 📊 Monitoring Strategy
+הגדרנו דאשבורד ייעודי בגרפאנה (App Uptime) המנטר את מצב הריצה של הקונטיינרים ב-Namespace של האפליקציה.
+
+**PromQL Query used:**
+kube_pod_container_status_running{namespace="default"}
+
+שאילתה זו מאפשרת לנו לוודא שהאפליקציה (WordPress) ומסד הנתונים (MySQL) למעלה, תוך סינון רעשי רקע של הקלאסטר.
+
+---
+
+### ✅ Definition of Done (Verified)
+- [V] Application is reachable and displaying "Hello World".
+- [V] Database is running as a StatefulSet with bound PVC.
+- [V] Grafana panels are active and showing "Running" status.
+- [V] Full Git repository with Helm structure is ready for submission.
