@@ -1,63 +1,11 @@
-# פרויקט DevOps: פריסת WordPress על Kubernetes עם ניטור מלא
-
-פרויקט זה מציג פריסה (Deployment) מלאה של אפליקציית WordPress המחוברת לבסיס נתונים MySQL, על גבי קלאסטר Kubernetes.
-המערכת מדמה סביבת ייצור (Production) וכוללת ניהול גרסאות, שמירת נתונים קבועה (Persistence), ומערכת ניטור בזמן אמת.
-
-**פיצ'רים מרכזיים:**
-* **High Availability:** אפליקציית WordPress רצה כ-Deployment עם יכולת לגידול (Scalability).
-* **Data Persistence:** בסיס הנתונים MySQL מוגדר כ-**StatefulSet** עם **PVC** כדי להבטיח שהמידע יישמר גם במקרה של נפילת פוד או אתחול.
-* **Container Registry:** שימוש ב-**AWS ECR** לאחסון ומשיכת ה-Images.
-* **Observability:** מערכת ניטור מלאה הכוללת **Prometheus** לאיסוף מטריקות ו-**Grafana** להצגת דאשבורדים.
-* **Package Management:** שימוש ב-**Helm** לניהול ההתקנות.
-
----
-
-### ארכיטקטורה וטכנולוגיות
-* **תשתית ענן:** AWS EC2 (T3.Medium).
-* **אורקסטרציה:** Minikube (Kubernetes).
-* **בסיס נתונים:** MySQL 8.0 (StatefulSet).
-* **ניטור:** Kube-Prometheus-Stack (Community Helm Chart).
-* **Ingress:** Nginx Ingress Controller.
-
----
-
-###  הוראות התקנה (Installation)
-
-#### 1. דרישות קדם
-* קלאסטר Kubernetes פעיל (Minikube).
-* כלי CLI מותקנים: `kubectl`, `helm`.
-* גישה ל-AWS ECR (עבור משיכת האימג'ים).
-
-#### 2. התקנת האפליקציה (WordPress + MySQL)
-ההתקנה מתבצעת באמצעות Helm Chart ייעודי שנכתב לפרויקט:
-```bash
+🚀 פרויקט DevOps: WordPress מנוהל על Kubernetesפריסה מודרנית, ניטור בזמן אמת ושמירת נתונים קבועהפרויקט זה מציג הגירה של אפליקציית WordPress מפורמט Docker-Compose לסביבת Kubernetes (Minikube) על גבי AWS EC2. המערכת תוכננה לספק זמינות גבוהה, שרידות נתונים וניטור מלא של בריאות הקונטיינרים.🏗️ ארכיטקטורה וטכנולוגיותשכבהטכנולוגיהתפקידInfrastructureAWS EC2 (T3.Medium)אירוח השרת והרצת Minikube.OrchestrationKubernetes (Minikube)ניהול הפודים, השירותים והמשאבים.RegistryAmazon ECRאחסון מאובטח של ה-Images המותאמים אישית.ApplicationWordPress Deploymentהרצת האתר עם 2 רפליקות לזמינות גבוהה.DatabaseMySQL StatefulSetניהול מסד הנתונים עם זהות קבועה ודיסק קשיח.MonitoringPrometheus & Grafanaאיסוף מטריקות וויזואליזציה של ביצועים.Traffic ControlNginx Ingressניהול הניתובים והכניסה לאפליקציה.✨ פיצ'רים מרכזייםHigh Availability: האפליקציה רצה כ-Deployment עם יכולת Scalability, מה שמבטיח עבודה רציפה גם אם פוד אחד קורס.Data Persistence: שימוש ב-PVC (Persistent Volume Claim) בתוך StatefulSet מבטיח שהמידע ב-MySQL לא יאבד לעולם, גם לאחר אתחול השרת.Observability: הטמעת ה-Stack המלא של פרומיתאוס מאפשרת זיהוי תקלות מהיר דרך לוחות בקרה ויזואליים.Modular Management: כל הפרויקט מנוהל דרך Helm Charts, מה שמאפשר פריסה מהירה ועדכוני גרסה קלים.⚙️ הוראות התקנה (Installation)1. דרישות קדםקלאסטר Kubernetes פעיל (Minikube).התקנת kubectl ו-helm.הגדרת הרשאות גישה ל-Amazon ECR.2. פריסת האפליקציהBash# התקנת ה-Chart של וורדפרס ובסיס הנתונים
 helm install wordpress-release ./my-wordpress-chart
-התקנת מערכת הניטור
-התקנת ה-Stack של פרומיתאוס וגרפאנה:
+3. הגדרת מערכת הניטורBash# הוספת המאגר של Prometheus
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
 
-Bash
-helm repo add prometheus-community [https://prometheus-community.github.io/helm-charts](https://prometheus-community.github.io/helm-charts)
-helm install monitoring-stack prometheus-community/kube-prometheus-stack -n monitoring
-גישה למערכת (Access)
-מכיוון שהפרויקט רץ על סביבת Minikube בתוך שרת מרוחק (EC2), הגישה מתבצעת בצורה מאובטחת באמצעות Port Forwarding:
-
-1. גישה לאתר (WordPress):
-
-Bash
-kubectl port-forward svc/wordpress 8080:80
-הכתובת בדפדפן: http://<Server-IP>:8080
-
-2. גישה ללוח הבקרה (Grafana):
-
-Bash
-kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring
-הכתובת בדפדפן: http://<Server-IP>:3000
-
- ניטור (Monitoring Strategy)
-הוגדר דאשבורד ייעודי ב-Grafana לניטור בריאות האפליקציה.
-
-המטריקה: kube_pod_container_status_running{namespace="default"}
-
-המטרה: סינון רעשי רקע (System Pods) והתמקדות בסטטוס ה-Uptime של קונטיינר הוורדפרס וה-DB בלבד.
-
-ויזואליזציה: פאנל Stat המציג חיווי ברור (ירוק/אדום) לזמינות השירותים.
+# התקנת הסטאק ב-Namespace ייעודי
+helm install monitoring-stack prometheus-community/kube-prometheus-stack -n monitoring --create-namespace
+🖥️ גישה למערכת (Access Strategy)בשל הרצת הפרויקט בסביבת מעבדה (EC2), הגישה מתבצעת דרך Port Forwarding מאובטח:WordPress:Bashkubectl port-forward --address 0.0.0.0 svc/wordpress 8080:80
+זמין בכתובת: http://<Public-IP>:8080Grafana Dashboard:Bashkubectl port-forward --address 0.0.0.0 svc/prometheus-grafana 3000:80 -n monitoring
+זמין בכתובת: http://<Public-IP>:3000📊 אסטרטגיית ניטור (Monitoring)כדי להתמקד בבריאות האפליקציה בלבד ולנטרל "רעשים" מהמערכת, יצרנו פאנל App Uptime ייעודי:שאילתה (PromQL): kube_pod_container_status_running{namespace="default"}.המטרה: מעקב ויזואלי (Stat Panel) אחרי מצב הריצה של קונטיינר הוורדפרס וה-DB ב-Namespace הראשי בלבד.
